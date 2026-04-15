@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 )
@@ -2016,6 +2017,12 @@ Ver
 
 	fmt.Println("Frontend corriendo en http://localhost:8080")
 
-	http.ListenAndServe(":8080", nil)
+	port := os.Getenv("PORT")
+
+	if port == "" {
+		port = "8080"
+	}
+
+	http.ListenAndServe(":"+port, nil)
 
 }
