@@ -29,6 +29,7 @@ func requiereLogin(handler http.HandlerFunc) http.HandlerFunc {
 func iniciarFrontend() {
 
 	// DASHBOARD
+	cargarUsuarios()
 	http.HandleFunc("/login", loginHandler)
 	http.HandleFunc("/logout", logoutHandler)
 
