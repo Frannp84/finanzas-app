@@ -8,10 +8,35 @@ import (
 	"time"
 )
 
+func requiereLogin(handler http.HandlerFunc) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		if usuarioActual == "" {
+
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+
+			return
+
+		}
+
+		handler(w, r)
+
+	}
+
+}
+
 func iniciarFrontend() {
 
 	// DASHBOARD
+	http.HandleFunc("/login", loginHandler)
+	http.HandleFunc("/logout", logoutHandler)
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if usuarioActual == "" {
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+		}
 
 		now := time.Now()
 
@@ -200,6 +225,14 @@ select, input {
 
 <h1>📊 Dashboard financiero</h1>
 
+<br>
+
+<button onclick="location.href='/logout'">
+
+Cerrar sesión
+
+</button>
+
 <form>
 
 Mes:
@@ -328,7 +361,14 @@ Ver
 	})
 
 	// MOVIMIENTOS
-	http.HandleFunc("/movimientos", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/movimientos", requiereLogin(func(w http.ResponseWriter, r *http.Request) {
+
+		if usuarioActual == "" {
+
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+
+		}
 
 		fmt.Fprintf(w, `
 
@@ -439,10 +479,10 @@ Ver
 
 		`)
 
-	})
+	}))
 
 	// FORMULARIO COMPLETO
-	http.HandleFunc("/agregar", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/agregar", requiereLogin(func(w http.ResponseWriter, r *http.Request) {
 
 		if r.Method == "POST" {
 
@@ -759,10 +799,10 @@ Ver
 			opcionesTarjetas,
 		)
 
-	})
+	}))
 
 	// VENCIMIENTOS
-	http.HandleFunc("/vencimientos", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/vencimientos", requiereLogin(func(w http.ResponseWriter, r *http.Request) {
 
 		var mes int = 3
 		var anio int = 2026
@@ -917,10 +957,10 @@ Ver
 
 	`)
 
-	})
+	}))
 
 	// GASTOS POR CATEGORIA
-	http.HandleFunc("/categorias", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/categorias", requiereLogin(func(w http.ResponseWriter, r *http.Request) {
 
 		gastos := make(map[string]float64)
 
@@ -1063,10 +1103,10 @@ Ver
 
 	`)
 
-	})
+	}))
 
 	// TARJETAS
-	http.HandleFunc("/tarjetas", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/tarjetas", requiereLogin(func(w http.ResponseWriter, r *http.Request) {
 
 		fmt.Fprintf(w, `
 
@@ -1188,10 +1228,10 @@ Ver
 
 	`)
 
-	})
+	}))
 
 	// TRANSFERENCIAS
-	http.HandleFunc("/transferencias", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/transferencias", requiereLogin(func(w http.ResponseWriter, r *http.Request) {
 
 		if r.Method == "POST" {
 
@@ -1376,10 +1416,10 @@ Ver
 			opciones,
 		)
 
-	})
+	}))
 
 	// GASTOS FIJOS
-	http.HandleFunc("/gastosfijos", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/gastosfijos", requiereLogin(func(w http.ResponseWriter, r *http.Request) {
 
 		if r.Method == "POST" {
 
@@ -1634,10 +1674,10 @@ Ver
 			opcionesTarjetas,
 		)
 
-	})
+	}))
 
 	// ANALISIS PRESUPUESTARIO
-	http.HandleFunc("/presupuesto", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/presupuesto", requiereLogin(func(w http.ResponseWriter, r *http.Request) {
 
 		var mes int = 3
 
@@ -1870,10 +1910,10 @@ Ver
 
 	`)
 
-	})
+	}))
 
 	// CREAR PRESUPUESTO
-	http.HandleFunc("/crear_presupuesto", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/crear_presupuesto", requiereLogin(func(w http.ResponseWriter, r *http.Request) {
 
 		if r.Method == "POST" {
 
@@ -2013,7 +2053,7 @@ Ver
 
 	`, opciones)
 
-	})
+	}))
 
 	fmt.Println("Frontend corriendo en http://localhost:8080")
 
@@ -2024,5 +2064,115 @@ Ver
 	}
 
 	http.ListenAndServe(":"+port, nil)
+
+}
+func mostrarLogin(w http.ResponseWriter) {
+
+	fmt.Fprintf(w, `
+	<html>
+
+	<head>
+
+	<title>Login</title>
+
+	<style>
+
+	body {
+
+		font-family: Arial;
+		background:#0f172a;
+		color:white;
+		padding:40px;
+
+	}
+
+	input {
+
+		padding:10px;
+		margin:10px;
+
+	}
+
+	button {
+
+		padding:10px;
+
+	}
+
+	</style>
+
+	</head>
+
+	<body>
+
+	<h1>Login</h1>
+
+	<form method="POST" action="/login">
+
+	Usuario:
+
+	<br>
+
+	<input name="usuario">
+
+	<br>
+
+	Password:
+
+	<br>
+
+	<input type="password" name="password">
+
+	<br>
+
+	<button>
+
+	Ingresar
+
+	</button>
+
+	</form>
+
+	</body>
+
+	</html>
+	`)
+
+}
+
+var usuarioActual string
+
+func loginHandler(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method == "GET" {
+
+		mostrarLogin(w)
+
+		return
+
+	}
+
+	user := r.FormValue("usuario")
+
+	pass := r.FormValue("password")
+
+	if validarUsuario(user, pass) {
+
+		usuarioActual = user
+
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+
+		return
+
+	}
+
+	fmt.Fprintf(w, "Usuario o password incorrecto")
+
+}
+func logoutHandler(w http.ResponseWriter, r *http.Request) {
+
+	usuarioActual = ""
+
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 
 }
