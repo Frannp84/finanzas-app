@@ -30,16 +30,16 @@ func cargarUsuarios() {
 
 func validarUsuario(user string, pass string) bool {
 
-	for _, u := range usuarios {
+	var id int
 
-		if u.Usuario == user && u.Password == pass {
+	err := db.QueryRow(
+		"SELECT id FROM usuarios WHERE usuario=$1 AND password=$2",
+		user, pass,
+	).Scan(&id)
 
-			return true
-
-		}
-
+	if err != nil {
+		return false
 	}
 
-	return false
-
+	return true
 }

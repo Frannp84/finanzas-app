@@ -32,6 +32,7 @@ func iniciarFrontend() {
 	cargarUsuarios()
 	http.HandleFunc("/login", loginHandler)
 	http.HandleFunc("/logout", logoutHandler)
+	http.HandleFunc("/registro", registroHandler)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if usuarioActual == "" {
@@ -2176,4 +2177,60 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 
+}
+
+func registroHandler(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method == "GET" {
+
+		fmt.Fprintf(w, `
+		<html>
+		<head>
+		<title>Registro</title>
+		</head>
+		<body>
+
+		<h1>Crear cuenta</h1>
+
+		<form method="POST">
+
+		Usuario:<br>
+		<input name="usuario"><br><br>
+
+		Password:<br>
+		<input type="password" name="password"><br><br>
+
+		<button type="submit">Registrarse</button>
+
+		</form>
+
+		<br>
+		<a href="/login">Ir a login</a>
+
+		</body>
+		</html>
+		`)
+
+		return
+	}
+
+	// POST
+
+	user := r.FormValue("usuario")
+	pass := r.FormValue("password")
+
+	if user == "" || pass == "" {
+		fmt.Fprintf(w, "❌ Completá todos los campos")
+		return
+	}
+
+	err := crearUsuarioDB(user, pass)
+
+	if err != nil {
+
+		fmt.Fprintf(w, "❌ El usuario ya existe")
+		return
+	}
+
+	fmt.Fprintf(w, "✅ Usuario creado! <a href='/login'>Login</a>")
 }

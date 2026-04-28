@@ -57,19 +57,14 @@ func crearTablaUsuarios() {
 	fmt.Println("✅ Tabla usuarios lista")
 }
 
-func crearUsuario(user string, pass string) {
+func crearUsuarioDB(user string, pass string) error {
 
 	_, err := db.Exec(
 		"INSERT INTO usuarios (usuario, password) VALUES ($1, $2)",
 		user, pass,
 	)
 
-	if err != nil {
-		fmt.Println("❌ Error creando usuario:", err)
-		return
-	}
-
-	fmt.Println("✅ Usuario creado correctamente")
+	return err
 }
 
 var tarjeta = Tarjeta{
@@ -88,7 +83,6 @@ var tarjeta = Tarjeta{
 func main() {
 	conectarDB()
 	crearTablaUsuarios()
-	crearUsuario("fran", "1234")
 	cargarDatos()
 	cargarPresupuestos()
 	cargarCategorias()
