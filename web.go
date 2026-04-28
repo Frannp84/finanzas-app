@@ -2135,6 +2135,9 @@ func mostrarLogin(w http.ResponseWriter) {
 
 	</form>
 
+	<br>
+	<a href="/registro">Crear cuenta</a>
+
 	</body>
 
 	</html>
