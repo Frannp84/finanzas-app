@@ -2,10 +2,75 @@ package main
 
 import (
 	"bufio"
+	"database/sql"
 	"fmt"
+	"log"
 	"os"
 	"strings"
+
+	_ "github.com/lib/pq"
 )
+
+var db *sql.DB
+
+func conectarDB() {
+
+	connStr := os.Getenv("DATABASE_URL")
+
+	if connStr == "" {
+		log.Fatal("❌ DATABASE_URL vacío")
+	}
+
+	var err error
+
+	db, err = sql.Open("postgres", connStr)
+
+	if err != nil {
+		log.Fatal("Error abriendo DB:", err)
+	}
+
+	err = db.Ping()
+
+	if err != nil {
+		log.Fatal("Error conectando a DB:", err)
+	}
+
+	fmt.Println("✅ DB conectada")
+}
+
+func crearTablaUsuarios() {
+
+	query := `
+	CREATE TABLE IF NOT EXISTS usuarios (
+		id SERIAL PRIMARY KEY,
+		usuario TEXT UNIQUE,
+		password TEXT
+	);
+	`
+
+	_, err := db.Exec(query)
+
+	if err != nil {
+		log.Fatal("Error creando tabla usuarios:", err)
+	}
+
+	fmt.Println("✅ Tabla usuarios lista")
+}
+
+func crearUsuario(user string, pass string) {
+
+	_, err := db.Exec(
+		"INSERT INTO usuarios (usuario, password) VALUES ($1, $2)",
+		user, pass,
+	)
+
+	if err != nil {
+		fmt.Println("❌ Error creando usuario:", err)
+		return
+	}
+
+	fmt.Println("✅ Usuario creado correctamente")
+}
 
 var tarjeta = Tarjeta{
 
@@ -21,11 +86,15 @@ var tarjeta = Tarjeta{
 }
 
 func main() {
+	conectarDB()
+	crearTablaUsuarios()
+	crearUsuario("fran", "1234")
 	cargarDatos()
 	cargarPresupuestos()
 	cargarCategorias()
 	cargarCuentas()
 	cargarTarjetas()
+	cargarUsuarios()
 	cargarTransferencias()
 	cargarGastosFijos()
 	iniciarFrontend() //

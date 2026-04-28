@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 )
 
@@ -17,9 +18,8 @@ func cargarUsuarios() {
 	file, err := os.Open("usuarios.json")
 
 	if err != nil {
-
+		fmt.Println("ERROR leyendo usuarios.json:", err)
 		return
-
 	}
 
 	defer file.Close()
